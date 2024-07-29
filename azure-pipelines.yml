@@ -7,7 +7,7 @@ variables:
   - name: branch
     value: 'main'  # Default value, can be overridden during pipeline run
   - name: pantheon-branch
-    value: 'main'  # Default value, can be overridden during pipeline run
+    value: 'master'  # Default value, can be overridden during pipeline run
 
 pool:
   name: 'azureagent'
