@@ -61,10 +61,11 @@ stages:
   - job: deploy_to_production
     displayName: 'Deploy to Production'
     dependsOn: [manual_approval, auto_deploy]
-    condition: or(and(succeeded('manual_approval'), or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))), and(succeeded('auto_deploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))))
+    condition: or(and(succeeded('manual_approval'), or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))), and(succeeded('auto_deploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))))  # Deploy if manual approval is successful and branch is master, or auto_deploy is successful and branch is not master
     pool:
       vmImage: $(vmImageName)
     steps:
     - script: |
         echo "Deploying to Production..."
+        # Add your deployment commands here
       displayName: 'Deployment Step'
