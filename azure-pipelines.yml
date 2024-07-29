@@ -7,18 +7,22 @@ variables:
 
 stages:
 - stage: Build
+  displayName: Build Stage
   jobs:
   - job: BuildJob
+    pool:
+      name: 'azureagent'
     steps:
     - script: echo Building...
       displayName: 'Build Step'
 
 - stage: Deploy
+  displayName: Deploy Stage
   dependsOn: Build
   condition: and(succeeded(), eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))
   jobs:
-  - job: manual_approval
-    displayName: "Manual Approval"
+  - job: ManualApproval
+    displayName: 'Manual Approval Job'
     pool:
       name: 'server'
     steps:
@@ -27,24 +31,27 @@ stages:
         instructions: 'Deployment requires manual approval. Please review and approve to continue.'
         onTimeout: 'resume'
         notifyUsers: "sa@example.com"
-      displayName: 'Manual Intervention for Main Branch Deployment'
+      displayName: 'Request Approval for Deployment'
 
   - job: DeployJob
-    dependsOn: manual_approval
-    condition: and(succeeded(), eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))
+    displayName: 'Deployment Job'
+    dependsOn: ManualApproval
+    condition: succeeded('ManualApproval')
     pool:
-      vmImage: 'ubuntu-latest'
+      name: 'azureagent'  # Use the appropriate pool if you need to switch back for deployment
     steps:
-    - script: echo Deploying to main branch...
+    - script: echo Deploying...
       displayName: 'Deploy Step'
 
 - stage: DeployNoApproval
+  displayName: Deploy Without Approval Stage
   dependsOn: Build
   condition: and(succeeded(), not(and(eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))))
   jobs:
   - job: DeployJobNoApproval
+    displayName: 'Deployment Job Without Approval'
     pool:
-      vmImage: 'ubuntu-latest'
+      name: 'azureagent'
     steps:
     - script: echo Deploying without approval...
       displayName: 'Deploy Step'
