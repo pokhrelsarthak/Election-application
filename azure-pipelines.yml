@@ -50,8 +50,6 @@ stages:
     dependsOn: manual_approval
     condition: and(succeeded('manual_approval'),or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))
     environment: 'main-dev'
-    pool:
-      vmImage: $vmImageName  # Ensure this variable is defined
     strategy:
       runOnce:
         deploy:
