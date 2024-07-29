@@ -2,8 +2,8 @@ trigger:
 - none
 
 variables:
-  branch: '$(Build.SourceBranchName)'  # Adjust this according to how you pass or set the branch variable
-  pantheon_branch: '$(PantheonBranch)'  # Adjust this according to how you pass or set the pantheon_branch variable
+  branch: 'main'  # Adjust this according to how you pass or set the branch variable
+  pantheon_branch: 'main'  # Adjust this according to how you pass or set the pantheon_branch variable
 
 stages:
 - stage: Build
