@@ -5,9 +5,9 @@ trigger:
 
 variables:
   - name: branch
-    value: 'main'
+    value: 'master'
   - name: pantheon-branch
-    value: 'main'
+    value: 'master'
   - name: vmImageName
     value: 'ubuntu-latest'
 
