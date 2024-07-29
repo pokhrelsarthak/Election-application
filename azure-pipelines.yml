@@ -1,16 +1,16 @@
 trigger:
   branches:
     include:
-      - main  # The branch you want to use as the trigger
+      - $branch  # Override this variable in Azure DevOps to specify the branch
+
+variables:
+  - name: branch
+    value: 'main'  # Default value, can be overridden during pipeline run
+  - name: pantheon-branch
+    value: 'main'  # Default value, can be overridden during pipeline run
 
 pool:
   name: 'azureagent'
-
-variables:
-  - name: master1
-    value: 'main'  # Default value, can be overridden during pipeline run
-  - name: master2
-    value: 'main'  # Default value, can be overridden during pipeline run
 
 stages:
 - stage: Build
@@ -29,26 +29,29 @@ stages:
 - stage: DeployToProduction
   displayName: 'Deploy to Production'
   dependsOn: Build
-  condition: or(eq(variables['master1'], 'main'),
-             eq(variables['master2'], 'main'))
+  condition: or( eq(variables['branch'], 'master'),eq(variables['pantheon-branch'], 'master'))
+   
   jobs:
   - job: manual_approval
     displayName: "Manual Approval"
     pool:
       name: 'server'
+    condition: or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))
     steps:
     - task: ManualValidation@0
-      timeoutInMinutes: 5
       inputs:
-        instructions: "Deployment to production requires manual approval. Please review and approve to continue."
-        notifyUsers: 'sarthakpokhrel3@gmail.com'
-        onTimeout: 'reject'  # Or 'resume' based on your requirement
-      displayName: 'Manual Approval Step'
+        instructions: 'Deployment to master branch requires manual approval. Please review and approve to continue.'
+        onTimeout: 'resume'
+        notifyUsers: "sa"
+      displayName: 'Manual Intervention for Master Branch Deployment'
 
   - deployment: DeployToProduction
     displayName: 'Deploy to Production'
     dependsOn: manual_approval
-    environment: 'main-dev' # Your environment name
+    condition: and(succeeded('manual_approval'),or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))
+    environment: 'main-dev'
+    pool:
+      vmImage: $vmImageName  # Ensure this variable is defined
     strategy:
       runOnce:
         deploy:
