@@ -8,6 +8,8 @@ variables:
     value: 'main'  # Default value, can be overridden during pipeline run
   - name: pantheon-branch
     value: 'main'  # Default value, can be overridden during pipeline run
+  - name: vmImageName
+    value: 'ubuntu-latest'
 
 pool:
   name: 'azureagent'
@@ -29,30 +31,41 @@ stages:
 - stage: DeployToProduction
   displayName: 'Deploy to Production'
   dependsOn: Build
-  condition: or( eq(variables['branch'], 'master'),eq(variables['pantheon-branch'], 'master'))
-   
+  condition: or(and(succeeded('manual_approval'), or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))), and(succeeded('auto_deploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))))
+
   jobs:
   - job: manual_approval
     displayName: "Manual Approval"
     pool:
       name: 'server'
-    condition: or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))
+    condition: or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))  # Only runs if either branch is 'master'
     steps:
     - task: ManualValidation@0
       inputs:
-        instructions: 'Deployment to master branch requires manual approval. Please review and approve to continue.'
+        instructions: 'Deployment requires manual approval. Please review and approve to continue.'
         onTimeout: 'resume'
         notifyUsers: "sa"
       displayName: 'Manual Intervention for Master Branch Deployment'
 
-  - deployment: DeployToProduction
+  - job: auto_deploy
+    displayName: 'Automatic Deployment'
+    pool:
+      vmImage: $(vmImageName)
+    condition: and(succeededOrFailed('BuildAndDeploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))))  # Only runs if neither branch is 'master'
+    steps:
+    - script: |
+        echo "Running automatic deployment steps for non-master branch..."
+        # Add your automatic deployment commands here
+      displayName: 'Automatic Deployment Step'
+
+  - job: deploy_to_production
     displayName: 'Deploy to Production'
-    dependsOn: manual_approval
-    condition: and(succeeded('manual_approval'),or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))
-    environment: 'main-dev'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - script: echo "Running deployment steps..."
-            displayName: 'Deployment Step'
+    dependsOn: [manual_approval, auto_deploy]
+    condition: or(and(succeeded('manual_approval'), or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))), and(succeeded('auto_deploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))))
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - script: |
+        echo "Running deployment steps..."
+        # Add your deployment commands here
+      displayName: 'Deployment Step'
