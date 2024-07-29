@@ -1,13 +1,13 @@
 trigger:
   branches:
     include:
-      - main  # Override this variable in Azure DevOps to specify the branch
+      - main
 
 variables:
   - name: branch
-    value: 'main'  # Default value, can be overridden during pipeline run
+    value: 'main'
   - name: pantheon-branch
-    value: 'main'  # Default value, can be overridden during pipeline run
+    value: 'main'
   - name: vmImageName
     value: 'ubuntu-latest'
 
@@ -25,7 +25,6 @@ stages:
 
     - script: |
         echo "Running build steps..."
-        # Add your build commands here
       displayName: 'Build Step'
 
 - stage: DeployToProduction
@@ -38,7 +37,7 @@ stages:
     displayName: "Manual Approval"
     pool:
       name: 'server'
-    condition: or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))  # Only runs if either branch is 'master'
+    condition: or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))
     steps:
     - task: ManualValidation@0
       inputs:
@@ -51,20 +50,19 @@ stages:
     displayName: 'Automatic Deployment'
     pool:
       vmImage: $(vmImageName)
-    condition: and(succeededOrFailed('BuildAndDeploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))))  # Only runs if neither branch is 'master'
+    condition: and(succeededOrFailed('BuildAndDeploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))))
     steps:
     - script: |
         echo "Running automatic deployment steps for non-master branch..."
-        # Add your automatic deployment commands here
       displayName: 'Automatic Deployment Step'
 
   - job: deploy_to_production
     displayName: 'Deploy to Production'
     dependsOn: [manual_approval, auto_deploy]
-    condition: or(and(succeeded('manual_approval'), or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))), and(succeeded('auto_deploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))))  # Deploy if manual approval is successful and branch is master, or auto_deploy is successful and branch is not master
+    condition: or(and(succeeded('manual_approval'), or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))), and(succeeded('auto_deploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))))
     pool:
       vmImage: $(vmImageName)
     steps:
     - script: |
-        echo "Deployment completed"
-      displayName: 'Deployment Step'
+        echo "Deployment to production completed."
+      displayName: 'Deployment to Production Step'
