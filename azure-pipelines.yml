@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - master  # The branch you want to use as the trigger
+      - main  # The branch you want to use as the trigger
 
 pool:
   name: 'azureagent'
@@ -29,8 +29,8 @@ stages:
 - stage: DeployToProduction
   displayName: 'Deploy to Production'
   dependsOn: Build
-  condition: or(eq(variables['master1'], 'master'),
-             eq(variables['master2'], 'master'))
+  condition: or(eq(variables['master1'], 'main'),
+             eq(variables['master2'], 'main'))
   jobs:
   - job: manual_approval
     displayName: "Manual Approval"
