@@ -1,13 +1,13 @@
 trigger:
   branches:
     include:
-      - $branch  # Override this variable in Azure DevOps to specify the branch
+      - main  # Override this variable in Azure DevOps to specify the branch
 
 variables:
   - name: branch
     value: 'main'  # Default value, can be overridden during pipeline run
   - name: pantheon-branch
-    value: 'master'  # Default value, can be overridden during pipeline run
+    value: 'main'  # Default value, can be overridden during pipeline run
 
 pool:
   name: 'azureagent'
