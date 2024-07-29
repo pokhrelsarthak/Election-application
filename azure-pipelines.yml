@@ -66,6 +66,5 @@ stages:
       vmImage: $(vmImageName)
     steps:
     - script: |
-        echo "Running deployment steps..."
-        # Add your deployment commands here
+        echo "Deploying to Production..."
       displayName: 'Deployment Step'
