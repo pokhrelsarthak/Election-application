@@ -30,36 +30,36 @@ stages:
 - stage: DeployToProduction
   displayName: 'Deploy to Production'
   dependsOn: Build
-  condition: or(and(succeeded('manual_approval'), or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))), and(succeeded('auto_deploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))))
+  condition: succeeded('BuildAndDeploy')
 
   jobs:
   - job: manual_approval
     displayName: "Manual Approval"
     pool:
       name: 'server'
-    condition: or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))
+    condition: and(eq(variables['branch'], 'main'), eq(variables['pantheon-branch'], 'main'))
     steps:
     - task: ManualValidation@0
       inputs:
         instructions: 'Deployment requires manual approval. Please review and approve to continue.'
         onTimeout: 'resume'
         notifyUsers: "sa"
-      displayName: 'Manual Intervention for Master Branch Deployment'
+      displayName: 'Manual Intervention for Main Branch Deployment'
 
   - job: auto_deploy
     displayName: 'Automatic Deployment'
     pool:
       vmImage: $(vmImageName)
-    condition: and(succeededOrFailed('BuildAndDeploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))))
+    condition: and(not(eq(variables['branch'], 'main')), not(eq(variables['pantheon-branch'], 'main')))
     steps:
     - script: |
-        echo "Running automatic deployment steps for non-master branch..."
+        echo "Running automatic deployment steps for non-main branch..."
       displayName: 'Automatic Deployment Step'
 
   - job: deploy_to_production
     displayName: 'Deploy to Production'
     dependsOn: [manual_approval, auto_deploy]
-    condition: or(and(succeeded('manual_approval'), or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master'))), and(succeeded('auto_deploy'), not(or(eq(variables['branch'], 'master'), eq(variables['pantheon-branch'], 'master')))))
+    condition: or(succeeded('manual_approval'), succeeded('auto_deploy'))
     pool:
       vmImage: $(vmImageName)
     steps:
