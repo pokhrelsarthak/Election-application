@@ -1,68 +1,50 @@
 trigger:
-  branches:
-    include:
-      - main
+- none
 
 variables:
-  - name: branch
-    value: 'master'
-  - name: pantheon-branch
-    value: 'master'
-  - name: vmImageName
-    value: 'ubuntu-latest'
-
-pool:
-  name: 'azureagent'
+  branch: '$(Build.SourceBranchName)'  # Adjust this according to how you pass or set the branch variable
+  pantheon_branch: '$(PantheonBranch)'  # Adjust this according to how you pass or set the pantheon_branch variable
 
 stages:
 - stage: Build
-  displayName: 'Build Stage'
   jobs:
-  - job: BuildAndDeploy
-    displayName: 'Build and Deploy'
+  - job: BuildJob
     steps:
-    - checkout: self
-
-    - script: |
-        echo "Running build steps..."
+    - script: echo Building...
       displayName: 'Build Step'
 
-- stage: DeployToProduction
-  displayName: 'Deploy to Production'
+- stage: Deploy
   dependsOn: Build
-  condition: succeeded('BuildAndDeploy')
-
+  condition: and(succeeded(), eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))
   jobs:
   - job: manual_approval
     displayName: "Manual Approval"
     pool:
       name: 'server'
-    condition: and(eq(variables['branch'], 'main'), eq(variables['pantheon-branch'], 'main'))
     steps:
     - task: ManualValidation@0
       inputs:
         instructions: 'Deployment requires manual approval. Please review and approve to continue.'
         onTimeout: 'resume'
-        notifyUsers: "sa"
+        notifyUsers: "sa@example.com"
       displayName: 'Manual Intervention for Main Branch Deployment'
 
-  - job: auto_deploy
-    displayName: 'Automatic Deployment'
+  - job: DeployJob
+    dependsOn: manual_approval
+    condition: and(succeeded(), eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))
     pool:
-      vmImage: $(vmImageName)
-    condition: and(not(eq(variables['branch'], 'main')), not(eq(variables['pantheon-branch'], 'main')))
+      vmImage: 'ubuntu-latest'
     steps:
-    - script: |
-        echo "Running automatic deployment steps for non-main branch..."
-      displayName: 'Automatic Deployment Step'
+    - script: echo Deploying to main branch...
+      displayName: 'Deploy Step'
 
-  - job: deploy_to_production
-    displayName: 'Deploy to Production'
-    dependsOn: [manual_approval, auto_deploy]
-    condition: or(succeeded('manual_approval'), succeeded('auto_deploy'))
+- stage: DeployNoApproval
+  dependsOn: Build
+  condition: and(succeeded(), not(and(eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))))
+  jobs:
+  - job: DeployJobNoApproval
     pool:
-      vmImage: $(vmImageName)
+      vmImage: 'ubuntu-latest'
     steps:
-    - script: |
-        echo "Deployment to production completed."
-      displayName: 'Deployment to Production Step'
+    - script: echo Deploying without approval...
+      displayName: 'Deploy Step'
