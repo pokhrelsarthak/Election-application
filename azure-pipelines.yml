@@ -2,8 +2,8 @@ trigger:
 - none
 
 variables:
-  branch: 'main'  # Adjust this according to how you pass or set the branch variable
-  pantheon_branch: 'main'  # Adjust this according to how you pass or set the pantheon_branch variable
+  branch: 'master'  
+  pantheon_branch: 'main'
 
 stages:
 - stage: Build
@@ -38,7 +38,7 @@ stages:
     dependsOn: ManualApproval
     condition: succeeded('ManualApproval')
     pool:
-      name: 'azureagent'  # Use the appropriate pool if you need to switch back for deployment
+      name: 'azureagent'  
     steps:
     - script: echo Deploying...
       displayName: 'Deploy Step'
