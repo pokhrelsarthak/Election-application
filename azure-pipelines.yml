@@ -2,8 +2,8 @@ trigger:
 - none
 
 variables:
-  branch: 'main'  
-  pantheon_branch: 'main'
+  branch: 'master'  
+  pantheon_branch: 'master'
 
 stages:
 - stage: Build
