@@ -2,7 +2,7 @@ trigger:
 - none
 
 variables:
-  branch: 'master'  
+  branch: 'main'  
   pantheon_branch: 'main'
 
 stages:
@@ -19,7 +19,7 @@ stages:
 - stage: Deploy
   displayName: Deploy Stage
   dependsOn: Build
-  condition: and(succeeded(), eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))
+  condition: and(succeeded(), or(eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main')))
   jobs:
   - job: ManualApproval
     displayName: 'Manual Approval Job'
@@ -46,7 +46,7 @@ stages:
 - stage: DeployNoApproval
   displayName: Deploy Without Approval Stage
   dependsOn: Build
-  condition: and(succeeded(), not(and(eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))))
+  condition: and(succeeded(), not(or(eq(variables['branch'], 'main'), eq(variables['pantheon_branch'], 'main'))))
   jobs:
   - job: DeployJobNoApproval
     displayName: 'Deployment Job Without Approval'
